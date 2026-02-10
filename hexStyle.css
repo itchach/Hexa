@@ -1,0 +1,344 @@
+@font-face {
+    font-family: 'pix';
+    src: url('pixel.TTF') format('truetype');
+}
+
+*{
+    font-family: 'pix';
+}
+body {
+    background-image: url('planet.gif');
+    background-size: cover;  
+    background-repeat: no-repeat; 
+    background-position: center;  
+    height: 100vh;               
+    margin: 0;     
+    font-family: 'pix';              
+}
+
+.caldiv {
+    display: flex;
+    justify-content: center; 
+    width: 100%;       
+    position: fixed;     
+}
+
+#calc {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem; 
+    width: max-content;
+    background-color: rgb(24, 17, 98);
+    padding: 2rem;
+    padding-top: 0.5rem;
+
+    border: 6px solid black; 
+    border-radius: 0;         
+    border: 4px solid black;
+    border-radius: 1rem;
+    box-shadow:
+        4px 4px 0 rgb(184, 182, 182),
+        -4px -4px 0 rgb(116, 115, 115),
+        4px -4px 0 rgb(255, 255, 255),
+        -4px 4px 0 rgb(255, 255, 255);
+    background-image: url('car.gif');
+    background-size: cover;  
+    background-repeat: no-repeat; 
+    background-position: center; 
+}
+
+#display {
+    height: 8rem;
+    width: 21rem;
+    background-color: rgb(53, 19, 111);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    font-size: 2rem;
+    border: 6px solid black;
+    color: white;
+    padding: 0 1rem;
+    box-sizing: border-box;
+
+      padding: 0 1rem;       /* adds space inside so text doesn't touch border */
+    box-sizing: border-box; /* ensures padding is included in width/height */
+    overflow: hidden;      /* hides extra text if it gets too long */
+    white-space: nowrap;  
+    margin-top: 0;
+
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 4rem); 
+    grid-gap: 0.5rem; 
+    justify-content: center;
+    font-family: 'pix';
+
+    font-family: 'pix', monospace;
+    
+
+    
+
+}
+
+button {
+    height: 4rem;
+    width: 4rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    background-color: rgb(33, 10, 73);
+    color: white;
+    border: 1px solid black; 
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+}
+
+.title{
+    color: white;
+}
+
+
+
+button:hover {
+    background-color: rgb(55, 25, 120); /* lighter purple */
+    transform: translate(-1px, -1px);   /* pop-up effect */
+    box-shadow:
+        2px 2px 0 white,
+        -2px -2px 0 black,
+        3px -3px 0 rgb(243, 240, 240),
+        -4px 5px 0 black;
+}
+
+button:active {
+    transform: translate(1px, 1px); /* pressed down */
+    box-shadow:
+        1px 1px 0 black,
+        -1px -1px 0 rgb(255, 255, 255);
+}
+
+
+#hex_bin{
+    display: flex;
+    position: absolute;
+    background-color: rgb(26, 25, 81);
+    z-index: 1;
+    width: 25rem;
+    height: 20rem;
+    padding: 1rem;
+    color: white;
+    right: 4rem;
+
+
+
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+
+        
+}
+
+#hexB{
+    display: flex;
+    position: absolute;
+    height: 4rem;
+    top: 4rem;
+    font-size: 2rem;
+    width: 25rem;
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+}
+
+
+#binH{
+    display: flex;
+    position: absolute;
+    height: 4rem;
+    top: 16rem;
+    font-size: 1rem;
+    width: 25rem;
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+    
+}
+
+button#convert{
+    display: flex;
+    position: absolute;
+    top: 10rem;
+    right: 2rem;
+    width: 8rem;
+    align-items: center;
+}
+
+#bintxt{
+    display: flex;
+    position: absolute;
+    bottom: 5rem;
+}
+
+
+
+#hex_bin {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#hex_bin.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+
+
+#bin_hex{
+    display: flex;
+    position: absolute;
+    background-color: rgb(43, 43, 88);
+    z-index: 1;
+    width: 25rem;
+    height: 20rem;
+    padding: 1rem;
+    color: white;
+    right: 4rem;
+
+
+
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+        
+}
+
+#binInput{
+    display: flex;
+    position: absolute;
+    height: 3rem;
+    top: 5rem;
+    font-size: 2rem;
+    width: 25rem;
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+}
+
+
+#hexOutput{
+    display: flex;
+    position: absolute;
+    height: 3rem;
+    top: 17.5rem;
+    font-size: 1rem;
+    width: 25rem;
+    border-radius: 0;         
+    border: 2px solid black;
+    border-radius: 50;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+    
+}
+
+#a{
+    display: flex;
+    position: absolute;
+    top: 2rem;
+}
+
+#b{ 
+    display: flex;
+    position: absolute;
+    bottom: 4rem;
+}
+
+#bh{
+    position: absolute;
+    right: 1rem;
+    width: 8rem;
+    bottom: 6rem;
+}
+
+
+#bin_hex {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#bin_hex.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+@media (max-width: 500px) {
+    #bin_hex{
+        right: 2rem;
+    }
+    #hex_bin{
+        right: 2rem;
+    }
+}
+
+
+#span{
+    font-size: 12px;
+}
+
+
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 4rem);
+    grid-gap: 0.5rem;
+}
+
+button {
+    height: 4rem;
+    width: 100%;
+}
+
+#span2 {
+    grid-column: span 2;
+}
