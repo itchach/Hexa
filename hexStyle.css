@@ -7,7 +7,7 @@
     font-family: 'pix';
 }
 body {
-    background-image: url('planet.gif');
+    background-image: url('');
     background-size: cover;  
     background-repeat: no-repeat; 
     background-position: center;  
@@ -16,14 +16,15 @@ body {
     font-family: 'pix';              
 }
 
-.caldiv {
-    display: flex;
-    justify-content: center; 
-    width: 100%;       
-    position: fixed;     
-}
+    .caldiv {
+        display: flex;
+        justify-content: center; 
+        width: 100%;       
+        position: fixed;  
+        z-index: 1;
+    }
 
-#calc {
+#calcbody {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -33,7 +34,7 @@ body {
     background-color: rgb(24, 17, 98);
     padding: 2rem;
     padding-top: 0.5rem;
-
+    
     border: 6px solid black; 
     border-radius: 0;         
     border: 4px solid black;
@@ -47,10 +48,39 @@ body {
     background-size: cover;  
     background-repeat: no-repeat; 
     background-position: center; 
+    z-index: 1;
+}
+
+#plus_bg{
+    background-image: url('port1.gif');
+    background-size: 120px;  
+    background-repeat: no-repeat; 
+    background-position: center; 
+}
+
+#minus_bg{
+    background-image: url('port1.gif');
+    background-size: 120px;  
+    background-repeat: no-repeat; 
+    background-position: center; 
+}
+
+.c_bg{
+    background-image: url('vio.gif');
+    background-size: cover;  
+    background-repeat: no-repeat; 
+    background-position: center; 
+}
+
+.e_bg{
+    background-image: url('vio.gif');
+    background-size: cover;  
+    background-repeat: no-repeat; 
+    background-position: center; 
 }
 
 #display {
-    height: 8rem;
+    height: 6rem;
     width: 21rem;
     background-color: rgb(53, 19, 111);
     display: flex;
@@ -102,11 +132,12 @@ button {
         -3px 4px 0 black;
 }
 
+
+
+
 .title{
     color: white;
 }
-
-
 
 button:hover {
     background-color: rgb(55, 25, 120); /* lighter purple */
@@ -168,7 +199,6 @@ button:active {
         -3px 4px 0 black;
 }
 
-
 #binH{
     display: flex;
     position: absolute;
@@ -202,8 +232,6 @@ button#convert{
     bottom: 5rem;
 }
 
-
-
 #hex_bin {
     opacity: 0;
     transform: translateY(-10px);
@@ -216,8 +244,6 @@ button#convert{
     transform: translateY(0);
     pointer-events: auto;
 }
-
-
 
 #bin_hex{
     display: flex;
@@ -259,7 +285,6 @@ button#convert{
         2px -2px 0 rgb(243, 240, 240),
         -3px 4px 0 black;
 }
-
 
 #hexOutput{
     display: flex;
@@ -324,13 +349,14 @@ button#convert{
 
 #span{
     font-size: 12px;
+    grid-column: span 1;
 }
 
 
 
 .buttons {
     display: grid;
-    grid-template-columns: repeat(5, 4rem);
+    grid-template-columns: repeat(4, 4rem);
     grid-gap: 0.5rem;
 }
 
@@ -340,5 +366,42 @@ button {
 }
 
 #span2 {
-    grid-column: span 2;
+    grid-column: span 3;
+}
+
+
+.name{
+    display: flex;
+    font-size: 1rem;
+    color: white;
+    justify-content: center;
+    margin-top: 0;
+}
+
+.bg_bg{
+    height: 2rem;
+    width: 5rem;
+    background-color: rgb(67, 180, 232);
+    border: 2px solid black;
+    border-radius: 50%;
+    box-shadow:
+        1px 1px 0 rgb(255, 255, 255),
+        -1px -1px 0 black,
+        2px -2px 0 rgb(243, 240, 240),
+        -3px 4px 0 black;
+    display: flex;
+    position: absolute;
+    left: 4rem;
+    justify-content: center;
+    z-index: 1;
+    
+}
+
+.Homepage {
+    background-image: url('planet.gif');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    transition: background-image 0.6s ease;
+    margin-top: 0;
 }

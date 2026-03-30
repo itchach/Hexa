@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hex Addition Calculator</title>
+<!-- Style css -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            text-align: center;
+            padding-top: 60px;
+        }
+
+        .calculator {
+            background: white;
+            width: 300px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        button {
+            width: 95%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #result {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+<!-- HTML STRUCTURE -->
+</head>
+
+<body>
+
+    <div class="calculator">
+        <h2>Hex Addition</h2>
+
+        <input type="text" id="hex1" placeholder="Enter first hex">
+        <input type="text" id="hex2" placeholder="Enter second hex">
+        <button onclick="addHex()">Add</button>
+
+        <p>Result: <span id="result"></span></p>
+    </div>
+
+
+
+
+
+<!-- JavaScript -->
+    <script>
+    function addHex() {
+        // Get the values from the input fields and convert to uppercase
+        let hex1 = document.getElementById("hex1").value.toUpperCase();
+        let hex2 = document.getElementById("hex2").value.toUpperCase();
+
+        // Define all valid hexadecimal characters
+        const hexChars = "0123456789ABCDEF";
+
+        // Initialize result string and carry
+        let result = "";
+        let carry = 0;
+
+        // Start from the last character (rightmost digit) of each hex number
+        let i = hex1.length - 1;
+        let j = hex2.length - 1;
+
+        // Loop through each digit from right to left until all digits and carry are processed
+        while (i >= 0 || j >= 0 || carry > 0) {
+
+            // Convert current digit to decimal. If index is out of bounds, use 0
+            let digit1 = i >= 0 ? hexChars.indexOf(hex1[i]) : 0;
+            let digit2 = j >= 0 ? hexChars.indexOf(hex2[j]) : 0;
+
+            // Check for invalid characters (not 0-9 or A-F)
+            if (digit1 === -1 || digit2 === -1) {
+                document.getElementById("result").innerText = "Invalid Hex Input!";
+                return; // Stop function if input is invalid
+            }
+
+            // Add the two digits and the carry
+            let sum = digit1 + digit2 + carry;
+
+            // Calculate new carry (any value >=16 will carry over)
+            carry = Math.floor(sum / 16);
+
+            // Calculate remainder (current digit for this position)
+            let remainder = sum % 16;
+
+            // Prepend the current digit to the result string
+            result = hexChars[remainder] + result;
+
+            // Move to the next digit to the left
+            i--;
+            j--;
+        }
+
+        // Display the final hexadecimal sum
+        document.getElementById("result").innerText = result;
+    }
+</script>
+</body>
+</html>

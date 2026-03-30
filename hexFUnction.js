@@ -1,40 +1,76 @@
-let display = "";
-let fnumber ="";
-let snumber ="";
-let equal = "";
-let operator = "";
+/* ==========================================
+    GLOBAL VARIABLES
+    These variables store calculator state
+========================================== */
 
-function sNumber(num){
+let display = "";     // Stores the current number shown on screen
+let fnumber = "";     // Stores the first number
+let snumber = "";     // Stores the second number
+let operator = "";    // Stores the selected operator (+, -, *, /)
+let result;         // Variable to store result
+
+
+/* ==========================================
+    INPUT HEX NUMBER FUNCTION
+    Adds a hex digit to the display
+========================================== */
+function Num(num){
+
+    // Convert input to hexadecimal and uppercase
     display += num.toString(16).toUpperCase();
+
+    // Update display element
     document.getElementById("display").innerText = display;
+
+    // Adjust font size if needed
     updateDisplay(display);
 }
 
+
+
+/* ==========================================
+    OPERATOR FUNCTIONS
+    Store first number and chosen operator
+========================================== */
+
 function Add() {
-    fnumber = display;
-    operator = "+";
-    display = "";
+    if (display === "" || operator !== "") {
+        return;
+    } //make the button only clickable once if no num entered and no operator selected
+    fnumber = display;     // Save first number
+    operator = "+";        // Set operator
+    display = "";          // Clear display for second number
     document.getElementById("display").innerText = "";
     updateDisplay(display);
 }
 
 function minum(){
+    if (display === "" || operator !== "") {
+        return;
+    }
+
     fnumber = display;
-    operator = "-"
+    operator = "-";
     display = "";
     document.getElementById("display").innerText = "";
     updateDisplay(display);
 }
 
 function multi(){
+    if (display === "" || operator !== "") {
+        return;
+    }
     fnumber = display;
-    operator = "*"
+    operator = "*";
     display = "";
     document.getElementById("display").innerText = "";
     updateDisplay(display);
 }
 
 function division(){
+    if (display === "" || operator !== "") {
+        return;
+    }
     fnumber = display;
     operator = "/";
     display = "";
@@ -42,28 +78,110 @@ function division(){
     updateDisplay(display);
 }
 
-function Ecual() {
-    snumber = display;
-    let result;
 
-    if(operator === "+"){
-            result = parseInt(fnumber, 16) + parseInt(snumber, 16);
+
+/* ==========================================
+    EQUAL FUNCTION
+    Performs the selected operation
+========================================== */
+function Ecual() {
+
+    snumber = display;  // Save second number
+    //error handling if the input is incomplete
+    if (!fnumber || !snumber || !operator) {
+        document.getElementById("display").innerText = "INCOMPLETE";
+        display = "";
+        return;
+    }
+
+    // all valid hex character
+    const hexChars = "0123456789ABCDEF";
+    //result storage
+    let result = "";
+    
+    if (operator === "+") {
+        // MANUAL HEX ADDITION
+        //carry storage
+        let carry = 0;
+        //start from right most index
+        let i = fnumber.length - 1; 
+        let j = snumber.length - 1; 
+                                
+        //check each index if true
+        while (i >= 0 || j >= 0 || carry > 0) {
+            let digit1 = i >= 0 ? hexChars.indexOf(fnumber[i].toUpperCase()) : 0; //set the digit to the value in index
+            let digit2 = j >= 0 ? hexChars.indexOf(snumber[j].toUpperCase()) : 0; 
+            //addition per digit
+            let sum = digit1 + digit2 + carry;
+            //calculate carry
+            carry = Math.floor(sum / 16);
+            //calculate the remainder number
+            let remainder = sum % 16;
+
+            result = hexChars[remainder] + result;
+
+            i--;
+            j--;
+        }
     }else if (operator === "-"){
-            result = parseInt(fnumber, 16) - parseInt(snumber, 16);
+        // ================= MANUAL HEX SUBTRACTION =================
+        let borrow = 0;
+        let i = fnumber.length - 1; 
+        let j = snumber.length - 1; 
+
+        // Check if second number > first number (negative not supported)
+        let firstDec = parseInt(fnumber, 16);
+        let secondDec = parseInt(snumber, 16);
+        if (secondDec > firstDec) {
+            document.getElementById("display").innerText = "negative num";
+            display = "";
+            return;
+        }
+        //calculation per digit
+        while (i >= 0) {
+            let digit1 = hexChars.indexOf(fnumber[i].toUpperCase()) - borrow;
+            let digit2 = j >= 0 ? hexChars.indexOf(snumber[j].toUpperCase()) : 0;
+
+            if (digit1 < digit2) {
+                digit1 += 16;
+                borrow = 1;
+            } else {
+                borrow = 0;
+            }
+
+            let diff = digit1 - digit2;
+            result = hexChars[diff] + result;
+
+            i--;
+            j--;
+        }
+
+        // Remove leading zeros
+        result = result.replace(/^0+/, "") || "0";
+
     }else if (operator === "*"){
-        result = parseInt(fnumber, 16) * parseInt(snumber, 16); 
+        result = parseInt(fnumber, 16) * parseInt(snumber, 16);
+
     }else if(operator === "/"){
         result = parseInt(fnumber, 16) / parseInt(snumber, 16);
-
     }
+
+    // Convert result back to hexadecimal
     display = result.toString(16).toUpperCase();
+
+    // Show result
     document.getElementById("display").innerText = display;
     updateDisplay(display);
+    display = "";
+
 }
 
 
 
-
+/* ==========================================
+    CLEAR DISPLAY FUNCTION
+    Resets calculator to default state
+========================================== */
 function clearDisplay() {
     display = "";
     fnumber = "";
@@ -73,15 +191,21 @@ function clearDisplay() {
 }
 
 
+
+/* ==========================================
+    UPDATE DISPLAY FUNCTION
+    Dynamically adjusts font size based on length
+========================================== */
 function updateDisplay(snumber) {
+
     const displayEl = document.getElementById("display");
     displayEl.innerText = snumber;
 
-    // Base font size (for small numbers)
+    // Default font size
     let fontSize = 2; // in rem
 
-    // Reduce font size proportionally if number gets too long
-    const maxChars = 8; // number of characters before shrinking starts
+    // Shrink font if number is too long
+    const maxChars = 8;
     if (snumber.length > maxChars) {
         fontSize = Math.max(0.8, 2 - (snumber.length - maxChars) * 0.1);
     }
@@ -91,51 +215,64 @@ function updateDisplay(snumber) {
 
 
 
+/* ==========================================
+    HEX TO BINARY CONVERSION
+========================================== 
 function binary() {
+
     const hexInput = document.getElementById("hexB");
     const binOutput = document.getElementById("binH");
+
     const hex = hexInput.value.trim().toUpperCase();
 
-    // empty input
+    // If empty input, clear output
     if (hex === "") {
         binOutput.value = "";
         return;
     }
 
-    // ❗ allow ONLY HEX characters (0–9, A–F)
+    // Validate hexadecimal input (0–9, A–F only)
     if (!/^[0-9A-F]+$/.test(hex)) {
-        binOutput.value = "Invalid HEX";
+        binOutput.value = "HEX ONLY ALLOWS (0-9, A-F)";
         return;
     }
 
+    // Convert hex to decimal, then decimal to binary
     const decimal = parseInt(hex, 16);
     binOutput.value = decimal.toString(2);
 }
 
 
+
+/* ==========================================
+    TOGGLE HEX → BINARY SECTION
+========================================== 
 function conversion() {
+
     const hexBin = document.getElementById("hex_bin");
     const binHex = document.getElementById("bin_hex");
 
     if (hexBin.classList.contains("show")) {
-        // if already visible → hide it
         hexBin.classList.remove("show");
     } else {
-        // show this, hide the other
         hexBin.classList.add("show");
         binHex.classList.remove("show");
     }
 }
 
+
+
+/* ==========================================
+    TOGGLE BINARY → HEX SECTION
+========================================== 
 function conversiom() {
+
     const hexBin = document.getElementById("hex_bin");
     const binHex = document.getElementById("bin_hex");
 
     if (binHex.classList.contains("show")) {
-        // if already visible → hide it
         binHex.classList.remove("show");
     } else {
-        // show this, hide the other
         binHex.classList.add("show");
         hexBin.classList.remove("show");
     }
@@ -143,17 +280,21 @@ function conversiom() {
 
 
 
+/* ==========================================
+    BINARY TO HEX CONVERSION
+========================================== 
 function binaryToHex() {
+
     const bin = document.getElementById("binInput").value.trim();
     const hexOutput = document.getElementById("hexOutput");
 
+    // Validate binary input (only 0 and 1)
     if (!/^[01]+$/.test(bin)) {
         hexOutput.value = "Invalid Binary";
         return;
     }
 
+    // Convert binary → decimal → hex
     const decimal = parseInt(bin, 2);
     hexOutput.value = decimal.toString(16).toUpperCase();
-}
-
-
+}*/

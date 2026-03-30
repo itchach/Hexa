@@ -1,0 +1,106 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌾 Harvest Logic — Truth Table Farm</title>
+    <link rel="stylesheet" href="trueds.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet" />
+    </head>
+    <body class="season-spring" id="app">
+
+    <!-- Seasonal particle canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Season switcher -->
+    <div class="season-bar">
+        <button class="season-btn active" data-season="spring" title="Spring">🌸</button>
+        <button class="season-btn" data-season="summer" title="Summer">☀️</button>
+        <button class="season-btn" data-season="fall" title="Fall">🍂</button>
+        <button class="season-btn" data-season="winter" title="Winter">❄️</button>
+        <button class="sound-btn" id="soundToggle" title="Toggle Sound">🔇</button>
+    </div>
+
+    <!-- Main card -->
+    <main class="farm-card">
+
+        <!-- Header -->
+        <header class="farm-header">
+        <div class="farm-icon-row">
+            <span class="deco-icon" id="headerIcon">🌻</span>
+            <div>
+            <h1 class="farm-title">Harvest Table</h1>
+            <p class="farm-subtitle">Truth Table Calculator</p>
+            </div>
+            <span class="deco-icon flip" id="headerIcon2">🌻</span>
+        </div>
+        <div class="wood-divider"></div>
+        </header>
+
+        <!-- Helper character -->
+        <div class="buddy-row" id="buddyRow">
+        <div class="buddy-avatar" id="buddyAvatar">🐔</div>
+        <div class="buddy-bubble" id="buddyBubble">
+            Howdy! Enter a logical expression and I'll help you harvest the truth! Try: <code>A ^ (B v C)</code>
+        </div>
+        </div>
+
+        <!-- Operator reference -->
+        <div class="op-guide">
+        <span class="op-chip"><code>-A</code> NOT</span>
+        <span class="op-chip"><code>A ^ B</code> AND</span>
+        <span class="op-chip"><code>A v B</code> OR</span>
+        <span class="op-chip"><code>A NOR B</code> NOR</span>
+        <span class="op-chip"><code>A -> B</code> IF→THEN</span>
+        <span class="op-chip"><code>A <-> B</code> IFF</span>
+        <span class="op-chip"><code>( )</code> Parens</span>
+        </div>
+
+        <!-- Input area -->
+        <div class="input-row">
+        <div class="input-wrap">
+            <label for="exprInput" class="input-label">🌿 Expression</label>
+            <input
+            type="text"
+            id="exprInput"
+            class="farm-input"
+            placeholder="e.g.  A ^ (B v -C)"
+            autocomplete="off"
+            spellcheck="false"
+            />
+        </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+        <button class="farm-btn primary" id="generateBtn">
+            <span>🌾</span> Harvest Table
+        </button>
+        <button class="farm-btn secondary" id="clearBtn">
+            <span>🪣</span> Clear
+        </button>
+        </div>
+
+        <!-- Error message -->
+        <div class="error-msg" id="errorMsg" hidden></div>
+
+        <!-- Output table -->
+        <div class="table-scroll" id="tableWrap" hidden>
+        <div class="table-header-label" id="tableLabel"></div>
+        <table class="truth-table" id="truthTable"></table>
+        </div>
+
+    </main>
+
+    <!-- Floating animated elements -->
+    <div class="floaties" id="floaties"></div>
+
+    <!-- Audio elements (silent by default) -->
+    <audio id="clickSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
+
+
+    <script src="TRUEFUNCTION.js"></script>
+    </body>
+    </html>
