@@ -1,106 +1,212 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌾 Harvest Logic — Truth Table Farm</title>
-    <link rel="stylesheet" href="trueds.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet" />
-    </head>
-    <body class="season-spring" id="app">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LogiCalc — Truth Table Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="trueds.css" />
+</head>
+<body class="theme-spring">
 
-    <!-- Seasonal particle canvas -->
-    <canvas id="particleCanvas"></canvas>
+  <div class="app-wrapper">
 
-    <!-- Season switcher -->
-    <div class="season-bar">
-        <button class="season-btn active" data-season="spring" title="Spring">🌸</button>
-        <button class="season-btn" data-season="summer" title="Summer">☀️</button>
-        <button class="season-btn" data-season="fall" title="Fall">🍂</button>
-        <button class="season-btn" data-season="winter" title="Winter">❄️</button>
-        <button class="sound-btn" id="soundToggle" title="Toggle Sound">🔇</button>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-icon">⊨</span>
+        <span class="logo-text">Logi<em>Calc</em></span>
+      </div>
+      <p class="logo-sub">Propositional Logic · Truth Table Generator</p>
+    </header>
+
+    <!-- Theme Switcher -->
+    <div class="theme-switcher">
+      <span class="theme-label">Theme:</span>
+      <button class="theme-btn active" data-theme="spring" title="Spring">🌸 Spring</button>
+      <button class="theme-btn" data-theme="summer" title="Summer">☀️ Summer</button>
+      <button class="theme-btn" data-theme="fall" title="Fall">🍂 Fall</button>
+      <button class="theme-btn" data-theme="winter" title="Winter">❄️ Winter</button>
     </div>
 
-    <!-- Main card -->
-    <main class="farm-card">
+    <!-- Main Calculator Card -->
+    <div class="calc-card">
 
-        <!-- Header -->
-        <header class="farm-header">
-        <div class="farm-icon-row">
-            <span class="deco-icon" id="headerIcon">🌻</span>
-            <div>
-            <h1 class="farm-title">Harvest Table</h1>
-            <p class="farm-subtitle">Truth Table Calculator</p>
+      <!-- Display -->
+      <div class="display-wrap">
+        <div class="display-label">Expression</div>
+        <div class="display-row">
+          <input type="text" id="expr-input" class="expr-input" placeholder="e.g. P ∧ Q → R" autocomplete="off" spellcheck="false"/>
+          <button class="btn-icon" id="btn-copy-expr" title="Copy Expression">⎘</button>
+        </div>
+        <div class="display-hint">Type or use buttons below · Supports: ∧ ∨ ¬ → ↔ and &&, ||, !, ->, &lt;-&gt;</div>
+      </div>
+
+      <!-- Variable Buttons -->
+      <div class="btn-section">
+        <div class="section-label">Variables</div>
+        <div class="btn-row vars-row">
+          <button class="calc-btn btn-var" data-insert="P">P</button>
+          <button class="calc-btn btn-var" data-insert="Q">Q</button>
+          <button class="calc-btn btn-var" data-insert="R">R</button>
+          <button class="calc-btn btn-var" data-insert="A">A</button>
+          <button class="calc-btn btn-var" data-insert="B">B</button>
+        </div>
+      </div>
+
+      <!-- Operator Buttons -->
+      <div class="btn-section">
+        <div class="section-label">Operators</div>
+        <div class="btn-row ops-row">
+          <button class="calc-btn btn-op" data-insert=" ∧ " title="AND">∧ <span>AND</span></button>
+          <button class="calc-btn btn-op" data-insert=" ∨ " title="OR">∨ <span>OR</span></button>
+          <button class="calc-btn btn-op" data-insert="¬" title="NOT">¬ <span>NOT</span></button>
+          <button class="calc-btn btn-op" data-insert=" → " title="IMPLIES">→ <span>IMP</span></button>
+          <button class="calc-btn btn-op" data-insert=" ↔ " title="BICONDITIONAL">↔ <span>BICON</span></button>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="btn-section">
+        <div class="section-label">Controls</div>
+        <div class="btn-row ctrl-row">
+          <button class="calc-btn btn-paren" data-insert="(">(</button>
+          <button class="calc-btn btn-paren" data-insert=")">)</button>
+          <button class="calc-btn btn-clear" id="btn-clear">C</button>
+          <button class="calc-btn btn-back" id="btn-back">⌫</button>
+          <button class="calc-btn btn-eval" id="btn-eval">= Generate</button>
+        </div>
+      </div>
+
+      <!-- Mode Buttons -->
+      <div class="mode-row">
+        <button class="mode-btn" id="btn-quiz">🧠 Quiz Mode</button>
+        <button class="mode-btn" id="btn-sheet">📘 Cheat Sheet</button>
+        <button class="mode-btn" id="btn-random">🎲 Random</button>
+        <button class="mode-btn" id="btn-copy-table" style="display:none">📋 Copy Table</button>
+      </div>
+      
+<audio id="bg-music"></audio>
+    </div>
+    <!-- /calc-card -->
+
+    <!-- Truth Table Output -->
+    <div class="table-section" id="table-section" style="display:none">
+      <div class="table-header-row">
+        <h2 class="table-title" id="table-title">Truth Table</h2>
+        <span class="row-count" id="row-count"></span>
+      </div>
+      <div class="table-scroll">
+        <table id="truth-table"></table>
+      </div>
+    </div>
+
+    <!-- Quiz Mode Panel -->
+    <div class="quiz-panel" id="quiz-panel" style="display:none">
+      <div class="panel-header">
+        <h2>🧠 Quiz Mode</h2>
+        <button class="panel-close" id="quiz-close">✕</button>
+      </div>
+      <p class="quiz-instruction">Fill in the <strong>Result column</strong> with T or F for each row.</p>
+      <div class="quiz-expr-wrap">
+        <span class="quiz-expr-label">Expression:</span>
+        <span class="quiz-expr" id="quiz-expr-display"></span>
+      </div>
+      <div class="table-scroll">
+        <table id="quiz-table"></table>
+      </div>
+      <div class="quiz-controls">
+        <button class="mode-btn btn-check" id="btn-check">✔ Check Answers</button>
+        <button class="mode-btn" id="btn-new-quiz">🎲 New Quiz</button>
+      </div>
+      <div class="quiz-score" id="quiz-score" style="display:none"></div>
+    </div>
+
+    <!-- Cheat Sheet Modal -->
+    <div class="modal-overlay" id="sheet-overlay" style="display:none">
+      <div class="sheet-modal">
+        <div class="panel-header">
+          <h2>📘 Logic Cheat Sheet</h2>
+          <button class="panel-close" id="sheet-close">✕</button>
+        </div>
+        <div class="sheet-content">
+          <div class="sheet-op">
+            <div class="sheet-symbol">∧</div>
+            <div class="sheet-info">
+              <div class="sheet-name">AND (Conjunction)</div>
+              <div class="sheet-rule">True only when <em>both</em> are True</div>
+              <div class="sheet-examples">
+                <span class="ex ex-t">T ∧ T = T</span>
+                <span class="ex ex-f">T ∧ F = F</span>
+                <span class="ex ex-f">F ∧ T = F</span>
+                <span class="ex ex-f">F ∧ F = F</span>
+              </div>
             </div>
-            <span class="deco-icon flip" id="headerIcon2">🌻</span>
+          </div>
+          <div class="sheet-op">
+            <div class="sheet-symbol">∨</div>
+            <div class="sheet-info">
+              <div class="sheet-name">OR (Disjunction)</div>
+              <div class="sheet-rule">True when <em>at least one</em> is True</div>
+              <div class="sheet-examples">
+                <span class="ex ex-t">T ∨ T = T</span>
+                <span class="ex ex-t">T ∨ F = T</span>
+                <span class="ex ex-t">F ∨ T = T</span>
+                <span class="ex ex-f">F ∨ F = F</span>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-op">
+            <div class="sheet-symbol">¬</div>
+            <div class="sheet-info">
+              <div class="sheet-name">NOT (Negation)</div>
+              <div class="sheet-rule">Inverts the truth value</div>
+              <div class="sheet-examples">
+                <span class="ex ex-f">¬T = F</span>
+                <span class="ex ex-t">¬F = T</span>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-op">
+            <div class="sheet-symbol">→</div>
+            <div class="sheet-info">
+              <div class="sheet-name">IMPLIES (Conditional)</div>
+              <div class="sheet-rule">False only when True → False</div>
+              <div class="sheet-examples">
+                <span class="ex ex-t">T → T = T</span>
+                <span class="ex ex-f">T → F = F</span>
+                <span class="ex ex-t">F → T = T</span>
+                <span class="ex ex-t">F → F = T</span>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-op">
+            <div class="sheet-symbol">↔</div>
+            <div class="sheet-info">
+              <div class="sheet-name">BICONDITIONAL (Iff)</div>
+              <div class="sheet-rule">True when both values are <em>equal</em></div>
+              <div class="sheet-examples">
+                <span class="ex ex-t">T ↔ T = T</span>
+                <span class="ex ex-f">T ↔ F = F</span>
+                <span class="ex ex-f">F ↔ T = F</span>
+                <span class="ex ex-t">F ↔ F = T</span>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-tip">
+            <strong>Operator Precedence (high → low):</strong><br>
+            ¬ (NOT) &nbsp;›&nbsp; ∧ (AND) &nbsp;›&nbsp; ∨ (OR) &nbsp;›&nbsp; → (IMP) &nbsp;›&nbsp; ↔ (BICON)
+          </div>
         </div>
-        <div class="wood-divider"></div>
-        </header>
+      </div>
+    </div>
 
-        <!-- Helper character -->
-        <div class="buddy-row" id="buddyRow">
-        <div class="buddy-avatar" id="buddyAvatar">🐔</div>
-        <div class="buddy-bubble" id="buddyBubble">
-            Howdy! Enter a logical expression and I'll help you harvest the truth! Try: <code>A ^ (B v C)</code>
-        </div>
-        </div>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
 
-        <!-- Operator reference -->
-        <div class="op-guide">
-        <span class="op-chip"><code>-A</code> NOT</span>
-        <span class="op-chip"><code>A ^ B</code> AND</span>
-        <span class="op-chip"><code>A v B</code> OR</span>
-        <span class="op-chip"><code>A NOR B</code> NOR</span>
-        <span class="op-chip"><code>A -> B</code> IF→THEN</span>
-        <span class="op-chip"><code>A <-> B</code> IFF</span>
-        <span class="op-chip"><code>( )</code> Parens</span>
-        </div>
+  </div><!-- /app-wrapper -->
 
-        <!-- Input area -->
-        <div class="input-row">
-        <div class="input-wrap">
-            <label for="exprInput" class="input-label">🌿 Expression</label>
-            <input
-            type="text"
-            id="exprInput"
-            class="farm-input"
-            placeholder="e.g.  A ^ (B v -C)"
-            autocomplete="off"
-            spellcheck="false"
-            />
-        </div>
-        </div>
-
-        <!-- Buttons -->
-        <div class="btn-row">
-        <button class="farm-btn primary" id="generateBtn">
-            <span>🌾</span> Harvest Table
-        </button>
-        <button class="farm-btn secondary" id="clearBtn">
-            <span>🪣</span> Clear
-        </button>
-        </div>
-
-        <!-- Error message -->
-        <div class="error-msg" id="errorMsg" hidden></div>
-
-        <!-- Output table -->
-        <div class="table-scroll" id="tableWrap" hidden>
-        <div class="table-header-label" id="tableLabel"></div>
-        <table class="truth-table" id="truthTable"></table>
-        </div>
-
-    </main>
-
-    <!-- Floating animated elements -->
-    <div class="floaties" id="floaties"></div>
-
-    <!-- Audio elements (silent by default) -->
-    <audio id="clickSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
-    </audio>
-
-
-    <script src="TRUEFUNCTION.js"></script>
-    </body>
-    </html>
+  <script src="TRUEFUNCTION.js"></script>
+</body>
+</html>

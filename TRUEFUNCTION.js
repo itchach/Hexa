@@ -1,586 +1,574 @@
-    /* ============================================================
-    HARVEST LOGIC — script.js
-    Truth Table Calculator + Seasonal Animations
-    ============================================================ */
+    /* ============================================
+    LOGICALC — TRUTH TABLE CALCULATOR
+    script.js
+    ============================================ */
 
-    /* ────────────────────────────────────────────────────────────
-    1.  SEASON SYSTEM
-    ──────────────────────────────────────────────────────────── */
+    "use strict";
 
-    const bgMusic = new Audio('sounds/Spring.mp3');
-bgMusic.loop = true;
-bgMusic.volume = 0.3;
-
-
-    const SEASONS = {
-    spring: {
-        bodyClass: 'season-spring',
-        icon1: '🌻', icon2: '🌱',
-        buddy: '🐔',
-        particles: ['🌸', '🌸', '🌷', '✿', '🌿'],
-        msg: "Howdy! Enter a logical expression and I'll help you harvest the truth! Try: <code>A ^ (B v C)</code>"
-    },
-    summer: {
-        bodyClass: 'season-summer',
-        icon1: '🌞', icon2: '🌻',
-        buddy: '🐄',
-        particles: ['☀️', '🌻', '✨', '🌟', '💛'],
-        msg: "It's a sunny day on the farm! Let's grow some logic! Try: <code>A -> (B <-> C)</code>"
-    },
-    fall: {
-        bodyClass: 'season-fall',
-        icon1: '🍂', icon2: '🎃',
-        buddy: '🐑',
-        particles: ['🍂', '🍁', '🍂', '🍃', '🌾'],
-        msg: "The harvest is in! Time to sort some truth values. Try: <code>(A v B) ^ -(A ^ B)</code>"
-    },
-    winter: {
-        bodyClass: 'season-winter',
-        icon1: '❄️', icon2: '⛄',
-        buddy: '🐧',
-        particles: ['❄️', '❄️', '❄️', '✦', '⭐'],
-        msg: "Cozy logic time! Snuggle up and evaluate some propositions. Try: <code>A NOR B</code>"
-    }
+    /* ============================================
+    EXPRESSION PARSER & EVALUATOR
+    ============================================ */
     
-    };
-
-    let currentSeason = 'spring';
-    let soundOn = false;
-    let floatyInterval = null;
-
-    function applySeason(name) {
-    const s = SEASONS[name];
-    if (!s) return;
-    currentSeason = name;
-
-    // Body class
-    const body = document.getElementById('app');
-    Object.values(SEASONS).forEach(sx => body.classList.remove(sx.bodyClass));
-    body.classList.add(s.bodyClass);
-
-    // Icons & buddy
-    document.getElementById('headerIcon').textContent  = s.icon1;
-    document.getElementById('headerIcon2').textContent = s.icon2;
-    document.getElementById('buddyAvatar').textContent  = s.buddy;
-    document.getElementById('buddyBubble').innerHTML    = s.msg;
-
-    // Active button
-    document.querySelectorAll('.season-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.season === name);
-    });
-
-    // Restart floaties
-    startFloaties(s.particles);
-    startParticleCanvas(name);
-    let newSrc = '';
-
-if (name === 'spring') newSrc = 'sounds/Spring.mp3';
-if (name === 'summer') newSrc = 'sounds/Summer.mp3';
-if (name === 'fall')   newSrc = 'sounds/Falls.mp3';
-if (name === 'winter') newSrc = 'sounds/Winter.mp3';
-
-if (bgMusic.src !== newSrc) {
-    bgMusic.src = newSrc;
-    bgMusic.load();
-}
-
-if (soundOn) {
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {});
-}
-    
+    /**
+     * Normalize expression: replace alias operators with canonical symbols
+     */
+    function normalizeExpr(expr) {
+    return expr
+        .replace(/<->/g, '↔')
+        .replace(/<->|<→/g, '↔')
+        .replace(/->/g, '→')
+        .replace(/&&/g, '∧')
+        .replace(/\|\|/g, '∨')
+        .replace(/!/g, '¬')
+        .replace(/\bAND\b/gi, '∧')
+        .replace(/\bOR\b/gi, '∨')
+        .replace(/\bNOT\b/gi, '¬')
+        .replace(/\bIMP\b/gi, '→')
+        .replace(/\bIFF\b/gi, '↔')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
 
-    /* ────────────────────────────────────────────────────────────
-    2.  FLOATING EMOJI ELEMENTS
-    ──────────────────────────────────────────────────────────── */
-    function startFloaties(particles) {
-    const container = document.getElementById('floaties');
-    container.innerHTML = '';
-    if (floatyInterval) clearInterval(floatyInterval);
-
-    function spawnFloaty() {
-        const el = document.createElement('span');
-        el.className = 'floaty';
-        el.textContent = particles[Math.floor(Math.random() * particles.length)];
-        el.style.left = Math.random() * 100 + 'vw';
-        el.style.fontSize = (16 + Math.random() * 18) + 'px';
-        const dur = 8 + Math.random() * 10;
-        el.style.animationDuration = dur + 's';
-        el.style.animationDelay = (Math.random() * -dur) + 's';
-        container.appendChild(el);
-        setTimeout(() => el.remove(), (dur + 2) * 1000);
-    }
-
-    // Seed a few immediately
-    for (let i = 0; i < 14; i++) spawnFloaty();
-    floatyInterval = setInterval(spawnFloaty, 1800);
-    }
-
-    /* ────────────────────────────────────────────────────────────
-    3.  CANVAS PARTICLE BACKGROUND
-    ──────────────────────────────────────────────────────────── */
-    const canvas = document.getElementById('particleCanvas');
-    const ctx = canvas.getContext('2d');
-    let canvasParticles = [];
-    let animFrame;
-
-    function startParticleCanvas(season) {
-    cancelAnimationFrame(animFrame);
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvasParticles = [];
-
-    const colorMap = {
-        spring: ['#f9c1e0','#b8f0a0','#ffe4f0','#c8f0d8'],
-        summer: ['#ffe850','#fff0a0','#ffe000','#ffd080'],
-        fall:   ['#e05010','#e08020','#c84000','#f0c040'],
-        winter: ['#d8eeff','#ffffff','#a8d8ff','#e8f4ff']
-    };
-    const colors = colorMap[season] || colorMap.spring;
-
-    for (let i = 0; i < 60; i++) {
-        canvasParticles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: 2 + Math.random() * 4,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        alpha: 0.3 + Math.random() * 0.4
-        });
-    }
-    drawCanvas();
-    }
-
-    function drawCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    canvasParticles.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.alpha;
-        ctx.fill();
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-    });
-    ctx.globalAlpha = 1;
-    animFrame = requestAnimationFrame(drawCanvas);
-    }
-
-    window.addEventListener('resize', () => {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    });
-
-    /* ────────────────────────────────────────────────────────────
-    4.  SOUND (Web Audio API — soft click)
-    ──────────────────────────────────────────────────────────── */
-    let audioCtx = null;
-
-    function initAudio() {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playClick() {
-    if (!soundOn || !audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(280, audioCtx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.18);
-    }
-
-    function playSuccess() {
-    if (!soundOn || !audioCtx) return;
-    const notes = [523, 659, 784, 1046];
-    notes.forEach((freq, i) => {
-        const osc  = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.value = freq;
-        const t = audioCtx.currentTime + i * 0.1;
-        gain.gain.setValueAtTime(0.12, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-        osc.start(t);
-        osc.stop(t + 0.25);
-    });
-    
-
-    }
-        document.getElementById('soundToggle').addEventListener('click', () => {
-        if (!audioCtx) initAudio();
-        soundOn = !soundOn;
-        document.getElementById('soundToggle').textContent = soundOn ? '🔇' : '🔊';
-        playClick();
-    });
-        document.getElementById('soundToggle').addEventListener('click', () => {
-        if (!audioCtx) initAudio();
-
-        soundOn = !soundOn;
-
-        const btn = document.getElementById('soundToggle');
-        btn.textContent = soundOn ? '🔇' : '🔊';
-
-        if (soundOn) {
-            bgMusic.play().catch(() => {});
-        } else {
-            bgMusic.pause();
+    /**
+     * Extract unique variables (A–Z) from expression, preserving order of appearance
+     */
+    function extractVariables(expr) {
+    const seen = new Set();
+    const vars = [];
+    for (const ch of expr) {
+        if (/[A-Z]/.test(ch) && !seen.has(ch)) {
+        seen.add(ch);
+        vars.push(ch);
         }
+    }
+    return vars;
+    }
 
-        playClick();
-    });
-    
-    
-
-
-
-    /* ────────────────────────────────────────────────────────────
-    5.  TOKENIZER
-    ──────────────────────────────────────────────────────────── */
-    /*
-    Supported operators & their token types:
-        -      → NOT (unary prefix)
-        ^      → AND
-        v      → OR  (lowercase v not a variable)
-        NOR    → NOR
-        ->     → IMP  (implication)
-        <->    → IFF  (biconditional)
-        ( )    → LPAREN / RPAREN
-        A-Z    → VAR
-    */
-
+    /**
+     * Tokenizer: breaks expression into tokens
+     */
     function tokenize(expr) {
     const tokens = [];
     let i = 0;
-    const s = expr.trim();
-
-    while (i < s.length) {
-        // Skip whitespace
-        if (s[i] === ' ' || s[i] === '\t') { i++; continue; }
-
-        // Biconditional <->
-        if (s.slice(i, i+3) === '<->') { tokens.push({ type: 'IFF',    val: '<->' }); i += 3; continue; }
-
-        // Implication ->
-        if (s.slice(i, i+2) === '->') { tokens.push({ type: 'IMP',    val: '->'  }); i += 2; continue; }
-
-        // NOR (case-insensitive)
-        if (s.slice(i, i+3).toUpperCase() === 'NOR') { tokens.push({ type: 'NOR', val: 'NOR' }); i += 3; continue; }
-
-        // NOT -
-        if (s[i] === '-') { tokens.push({ type: 'NOT', val: '-' }); i++; continue; }
-
-        // AND ^
-        if (s[i] === '^') { tokens.push({ type: 'AND', val: '^' }); i++; continue; }
-
-        // OR v  (only lowercase or uppercase V when standalone)
-        if (s[i] === 'v' && (i+1 >= s.length || !/[A-Za-z0-9]/.test(s[i+1])) ) {
-        tokens.push({ type: 'OR', val: 'v' }); i++; continue;
-        }
-
-        // Parens
-        if (s[i] === '(') { tokens.push({ type: 'LPAREN', val: '(' }); i++; continue; }
-        if (s[i] === ')') { tokens.push({ type: 'RPAREN', val: ')' }); i++; continue; }
-
-        // Variable A-Z (single uppercase letter)
-        if (/[A-Z]/.test(s[i])) { tokens.push({ type: 'VAR', val: s[i] }); i++; continue; }
-
-        // Also allow lowercase single letters that aren't 'v' as vars (for convenience)
-        if (/[a-uw-z]/.test(s[i])) {
-        tokens.push({ type: 'VAR', val: s[i].toUpperCase() }); i++; continue;
-        }
-
-        throw new Error(`Unexpected character: "${s[i]}" at position ${i}`);
+    while (i < expr.length) {
+        const ch = expr[i];
+        if (ch === ' ') { i++; continue; }
+        if (/[A-Z]/.test(ch)) { tokens.push({ type: 'VAR', val: ch }); i++; continue; }
+        if (ch === '¬') { tokens.push({ type: 'NOT' }); i++; continue; }
+        if (ch === '∧') { tokens.push({ type: 'AND' }); i++; continue; }
+        if (ch === '∨') { tokens.push({ type: 'OR' }); i++; continue; }
+        if (ch === '→') { tokens.push({ type: 'IMP' }); i++; continue; }
+        if (ch === '↔') { tokens.push({ type: 'BICON' }); i++; continue; }
+        if (ch === '(') { tokens.push({ type: 'LPAREN' }); i++; continue; }
+        if (ch === ')') { tokens.push({ type: 'RPAREN' }); i++; continue; }
+        throw new Error(`Unknown character: "${ch}"`);
     }
     return tokens;
     }
 
-    /* ────────────────────────────────────────────────────────────
-    6.  RECURSIVE DESCENT PARSER
-    ──────────────────────────────────────────────────────────── */
-    /*
-    Grammar (lowest to highest precedence):
-        expr      ::= iff
-        iff       ::= imp ( '<->' imp )*
-        imp       ::= or  ( '->'  or  )*
-        or_nor    ::= and ( ('v'|'NOR') and )*
-        and       ::= not ( '^' not )*
-        not       ::= '-' not | atom
-        atom      ::= VAR | '(' expr ')'
-    */
-
+    /**
+     * Recursive descent parser
+     * Grammar (descending precedence):
+     *   expr     → bicon
+     *   bicon    → imp ('↔' imp)*
+     *   imp      → disj ('→' disj)*   [right-assoc]
+     *   disj     → conj ('∨' conj)*
+     *   conj     → unary ('∧' unary)*
+     *   unary    → '¬' unary | primary
+     *   primary  → VAR | '(' expr ')'
+     */
     function parse(tokens) {
     let pos = 0;
 
-    function peek()    { return tokens[pos]; }
-    function consume() { return tokens[pos++]; }
-    function expect(type) {
-        const t = consume();
-        if (!t || t.type !== type) throw new Error(`Expected ${type}, got ${t ? t.type : 'end'}`);
-        return t;
+    function peek() { return tokens[pos]; }
+    function consume(type) {
+        const tok = tokens[pos];
+        if (type && (!tok || tok.type !== type)) {
+        throw new Error(`Expected ${type} at position ${pos}, got ${tok ? tok.type : 'EOF'}`);
+        }
+        pos++;
+        return tok;
     }
 
-    function parseExpr()  { return parseIff(); }
-
-    function parseIff() {
+    function parseBicon() {
         let left = parseImp();
-        while (peek() && peek().type === 'IFF') {
-        consume();
+        while (peek() && peek().type === 'BICON') {
+        consume('BICON');
         const right = parseImp();
-        left = { op: 'IFF', left, right };
+        const l = left, r = right;
+        left = (env) => parseBicon_eval(l(env), r(env));
         }
         return left;
     }
+
+    function parseBicon_eval(a, b) { return a === b; }
 
     function parseImp() {
-        let left = parseOrNor();
-        while (peek() && peek().type === 'IMP') {
-        consume();
-        const right = parseOrNor();
-        left = { op: 'IMP', left, right };
+        const left = parseDisj();
+        if (peek() && peek().type === 'IMP') {
+        consume('IMP');
+        const right = parseImp(); // right-associative
+        return (env) => (!left(env) || right(env));
         }
         return left;
     }
 
-    function parseOrNor() {
-        let left = parseAnd();
-        while (peek() && (peek().type === 'OR' || peek().type === 'NOR')) {
-        const op = consume().type;
-        const right = parseAnd();
-        left = { op, left, right };
+    function parseDisj() {
+        let left = parseConj();
+        while (peek() && peek().type === 'OR') {
+        consume('OR');
+        const right = parseConj();
+        const l = left, r = right;
+        left = (env) => l(env) || r(env);
         }
         return left;
     }
 
-    function parseAnd() {
-        let left = parseNot();
+    function parseConj() {
+        let left = parseUnary();
         while (peek() && peek().type === 'AND') {
-        consume();
-        const right = parseNot();
-        left = { op: 'AND', left, right };
+        consume('AND');
+        const right = parseUnary();
+        const l = left, r = right;
+        left = (env) => l(env) && r(env);
         }
         return left;
     }
 
-    function parseNot() {
+    function parseUnary() {
         if (peek() && peek().type === 'NOT') {
-        consume();
-        const operand = parseNot();
-        return { op: 'NOT', operand };
+        consume('NOT');
+        const inner = parseUnary();
+        return (env) => !inner(env);
         }
-        return parseAtom();
+        return parsePrimary();
     }
 
-    function parseAtom() {
-        const t = peek();
-        if (!t) throw new Error('Unexpected end of expression');
-        if (t.type === 'VAR') {
-        consume();
-        return { op: 'VAR', name: t.val };
+    function parsePrimary() {
+        const tok = peek();
+        if (!tok) throw new Error('Unexpected end of expression');
+        if (tok.type === 'VAR') {
+        consume('VAR');
+        const name = tok.val;
+        return (env) => env[name];
         }
-        if (t.type === 'LPAREN') {
-        consume();
-        const inner = parseExpr();
-        expect('RPAREN');
+        if (tok.type === 'LPAREN') {
+        consume('LPAREN');
+        const inner = parseBicon();
+        consume('RPAREN');
         return inner;
         }
-        throw new Error(`Unexpected token: "${t.val}" (type ${t.type})`);
+        throw new Error(`Unexpected token: ${tok.type}`);
     }
 
-    const tree = parseExpr();
-    if (pos < tokens.length) {
-        throw new Error(`Unexpected token after expression: "${tokens[pos].val}"`);
+    const fn = parseBicon();
+    if (pos !== tokens.length) {
+        throw new Error(`Unexpected token at position ${pos}`);
     }
-    return tree;
-    }
-
-    /* ────────────────────────────────────────────────────────────
-    7.  EVALUATOR
-    ──────────────────────────────────────────────────────────── */
-    function evaluate(node, env) {
-    switch (node.op) {
-        case 'VAR': return env[node.name];
-        case 'NOT': return !evaluate(node.operand, env);
-        case 'AND': return  evaluate(node.left, env) && evaluate(node.right, env);
-        case 'OR':  return  evaluate(node.left, env) || evaluate(node.right, env);
-        case 'NOR': return !(evaluate(node.left, env) || evaluate(node.right, env));
-        case 'IMP': return !evaluate(node.left, env) || evaluate(node.right, env);
-        case 'IFF': return  evaluate(node.left, env) === evaluate(node.right, env);
-        default: throw new Error(`Unknown operator: ${node.op}`);
-    }
+    return fn;
     }
 
-    /* ────────────────────────────────────────────────────────────
-    8.  VARIABLE EXTRACTION (in appearance order, unique)
-    ──────────────────────────────────────────────────────────── */
-    function extractVars(tokens) {
-    const seen = new Set();
-    const vars = [];
-    for (const t of tokens) {
-        if (t.type === 'VAR' && !seen.has(t.val)) {
-        seen.add(t.val);
-        vars.push(t.val);
-        }
-    }
-    return vars.sort(); // alphabetical
+    /**
+     * Evaluate expression with variable bindings
+     */
+    function evaluate(expr, env) {
+    const normalized = normalizeExpr(expr);
+    const tokens = tokenize(normalized);
+    const fn = parse(tokens);
+    return fn(env);
     }
 
-    /* ────────────────────────────────────────────────────────────
-    9.  TRUTH TABLE GENERATOR
-    ──────────────────────────────────────────────────────────── */
-    function generateTable(expr) {
-    const tokens = tokenize(expr);
-    const tree   = parse(tokens);
-    const vars   = extractVars(tokens);
-    const n      = vars.length;
-    const rows   = [];
-
+    /**
+     * Generate all truth combinations for n variables
+     */
+function generateCombinations(vars) {
+    const n = vars.length;
+    const rows = [];
     const total = Math.pow(2, n);
+
     for (let i = 0; i < total; i++) {
         const env = {};
-        vars.forEach((v, idx) => {
-        env[v] = Boolean((i >> (n - 1 - idx)) & 1);
-        });
-        rows.push({ env, result: evaluate(tree, env) });
-    }
-    return { vars, rows, expr };
-    }
 
-    /* ────────────────────────────────────────────────────────────
-    10.  DOM / RENDER
-    ──────────────────────────────────────────────────────────── */
-    function renderTable(vars, rows, expr) {
-    const wrap  = document.getElementById('tableWrap');
-    const label = document.getElementById('tableLabel');
-    const table = document.getElementById('truthTable');
-
-    label.textContent = `🌾 Truth Table for: ${expr}`;
-    table.innerHTML = '';
-
-    // thead
-    const thead = table.createTHead();
-    const hr    = thead.insertRow();
-    [...vars, expr].forEach((col, idx) => {
-        const th = document.createElement('th');
-        th.textContent = col;
-        if (idx === vars.length) {
-        th.style.background = 'rgba(0,0,0,0.12)';
-        th.style.borderLeft = '2px solid rgba(255,255,255,0.4)';
+        for (let j = 0; j < n; j++) {
+            const blockSize = Math.pow(2, n - j - 1);
+            env[vars[j]] = Math.floor(i / blockSize) % 2 === 0;
         }
-        hr.appendChild(th);
+
+        rows.push(env);
+    }
+
+    return rows;
+}
+
+    /**
+     * Build complete truth table data
+     */
+    function buildTruthTable(exprRaw) {
+    const expr = normalizeExpr(exprRaw);
+    if (!expr) throw new Error('Empty expression');
+    const vars = extractVariables(expr);
+    if (vars.length === 0) throw new Error('No variables found');
+    if (vars.length > 5) throw new Error('Maximum 5 variables supported');
+    const rows = generateCombinations(vars);
+    const results = rows.map(env => {
+        try { return evaluate(expr, env); }
+        catch (e) { throw new Error('Evaluation error: ' + e.message); }
     });
+    return { vars, rows, results, expr };
+    }
 
-    // tbody
-    const tbody = table.createTBody();
-    rows.forEach((row, ri) => {
-        const tr = tbody.insertRow();
-        tr.style.animationDelay = (ri * 0.04) + 's';
+    /* ============================================
+    DOM HELPERS
+    ============================================ */
+    const $ = id => document.getElementById(id);
+    const boolStr = v => v ? 'T' : 'F';
+    const boolClass = v => v ? 'cell-t' : 'cell-f';
 
+    function showToast(msg, duration = 2200) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    /* ============================================
+    TRUTH TABLE RENDERER
+    ============================================ */
+    function renderTruthTable(data) {
+    const { vars, rows, results, expr } = data;
+    const section = $('table-section');
+    const table = $('truth-table');
+    const title = $('table-title');
+    const rowCount = $('row-count');
+
+    title.textContent = expr;
+    rowCount.textContent = `${rows.length} rows`;
+
+    // Build header
+    let html = '<thead><tr>';
+    vars.forEach(v => { html += `<th>${v}</th>`; });
+    html += `<th class="result-col">Result</th></tr></thead>`;
+
+    // Build body
+    html += '<tbody>';
+    rows.forEach((env, i) => {
+        html += '<tr>';
         vars.forEach(v => {
-        const td = tr.insertCell();
-        const span = document.createElement('span');
-        span.className = row.env[v] ? 'val-true' : 'val-false';
-        span.textContent = row.env[v] ? 'T' : 'F';
-        td.appendChild(span);
+        html += `<td class="${boolClass(env[v])}">${boolStr(env[v])}</td>`;
+        });
+        html += `<td class="result-col ${boolClass(results[i])}">${boolStr(results[i])}</td>`;
+        html += '</tr>';
+    });
+    html += '</tbody>';
+
+    table.innerHTML = html;
+    section.style.display = 'block';
+    $('btn-copy-table').style.display = '';
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    /* ============================================
+    CALCULATOR INPUT LOGIC
+    ============================================ */
+    const input = $('expr-input');
+
+    function insertAtCursor(text) {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const val = input.value;
+    input.value = val.slice(0, start) + text + val.slice(end);
+    input.selectionStart = input.selectionEnd = start + text.length;
+    input.focus();
+    input.classList.remove('error');
+    }
+
+    // Calc buttons
+    document.querySelectorAll('.calc-btn[data-insert]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        insertAtCursor(btn.dataset.insert);
+        ripple(btn);
+    });
+    });
+
+    // Clear
+    $('btn-clear').addEventListener('click', () => {
+    input.value = '';
+    input.classList.remove('error');
+    input.focus();
+    ripple($('btn-clear'));
+    });
+
+    // Backspace
+    $('btn-back').addEventListener('click', () => {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    if (start !== end) {
+        const val = input.value;
+        input.value = val.slice(0, start) + val.slice(end);
+        input.selectionStart = input.selectionEnd = start;
+    } else if (start > 0) {
+        // Handle multi-char operators
+        const val = input.value;
+        let del = 1;
+        const multi = [' ∧ ', ' ∨ ', ' → ', ' ↔ '];
+        for (const op of multi) {
+        if (val.slice(start - op.length, start) === op) { del = op.length; break; }
+        }
+        input.value = val.slice(0, start - del) + val.slice(start);
+        input.selectionStart = input.selectionEnd = start - del;
+    }
+    input.focus();
+    });
+
+    // Evaluate
+    $('btn-eval').addEventListener('click', evaluateExpr);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') evaluateExpr(); });
+
+    function evaluateExpr() {
+    const raw = input.value.trim();
+    if (!raw) { showToast('Please enter an expression'); return; }
+    try {
+        const data = buildTruthTable(raw);
+        renderTruthTable(data);
+        input.classList.remove('error');
+    } catch (err) {
+        input.classList.add('error');
+        setTimeout(() => input.classList.remove('error'), 700);
+        showToast('Error: ' + err.message, 3000);
+    }
+    }
+
+    // Copy expression
+    $('btn-copy-expr').addEventListener('click', () => {
+    if (!input.value.trim()) return;
+    navigator.clipboard.writeText(input.value).then(() => showToast('Expression copied!'));
+    });
+
+    // Copy table
+    $('btn-copy-table').addEventListener('click', () => {
+    const table = $('truth-table');
+    if (!table.innerHTML) return;
+    let text = '';
+    table.querySelectorAll('tr').forEach(row => {
+        const cells = [...row.querySelectorAll('th, td')].map(c => c.textContent.padEnd(6));
+        text += cells.join(' ') + '\n';
+    });
+    navigator.clipboard.writeText(text).then(() => showToast('Table copied to clipboard!'));
+    });
+
+    /* ============================================
+    BUTTON RIPPLE EFFECT
+    ============================================ */
+    function ripple(btn) {
+    btn.style.transform = 'scale(0.93) translateY(1px)';
+    setTimeout(() => { btn.style.transform = ''; }, 150);
+    }
+
+    /* ============================================
+    RANDOM EXPRESSION GENERATOR
+    ============================================ */
+    const RANDOM_TEMPLATES = [
+    (a, b) => `${a} ∧ ${b}`,
+    (a, b) => `${a} ∨ ${b}`,
+    (a, b) => `¬${a} ∧ ${b}`,
+    (a, b) => `${a} → ${b}`,
+    (a, b) => `${a} ↔ ${b}`,
+    (a, b) => `¬(${a} ∧ ${b})`,
+    (a, b) => `¬${a} ∨ ¬${b}`,
+    (a, b) => `(${a} ∨ ${b}) → ${a}`,
+    (a, b, c) => `(${a} ∧ ${b}) ∨ ${c}`,
+    (a, b, c) => `${a} → (${b} ∨ ${c})`,
+    (a, b, c) => `¬${a} ∧ (${b} ↔ ${c})`,
+    (a, b, c) => `(${a} ∨ ${b}) ∧ ¬${c}`,
+    (a, b, c) => `(${a} → ${b}) ∧ (${b} → ${c})`,
+    (a, b, c) => `¬(${a} ∨ ${b}) ↔ (¬${a} ∧ ¬${b})`,
+    (a, b, c) => `${a} ↔ (${b} ∧ ${c})`,
+    ];
+
+    function getRandomExpression(forQuiz = false) {
+    const allVars = ['P', 'Q', 'R', 'A', 'B'];
+    const numVars = forQuiz ? (Math.random() < 0.5 ? 2 : 3) : (Math.floor(Math.random() * 3) + 2);
+    const shuffled = [...allVars].sort(() => Math.random() - 0.5).slice(0, numVars);
+    const templates = RANDOM_TEMPLATES.filter(t => t.length <= numVars);
+    const tpl = templates[Math.floor(Math.random() * templates.length)];
+    return tpl(...shuffled);
+    }
+
+    $('btn-random').addEventListener('click', () => {
+    const expr = getRandomExpression(false);
+    input.value = expr;
+    input.classList.remove('error');
+    ripple($('btn-random'));
+    evaluateExpr();
+    });
+
+    /* ============================================
+    QUIZ MODE
+    ============================================ */
+    let quizData = null;
+
+    $('btn-quiz').addEventListener('click', startQuiz);
+    $('quiz-close').addEventListener('click', () => { $('quiz-panel').style.display = 'none'; });
+    $('btn-new-quiz').addEventListener('click', startQuiz);
+    $('btn-check').addEventListener('click', checkQuiz);
+
+    function startQuiz() {
+    const expr = getRandomExpression(true);
+    try {
+        quizData = buildTruthTable(expr);
+    } catch (e) {
+        showToast('Error generating quiz'); return;
+    }
+    $('quiz-expr-display').textContent = quizData.expr;
+    $('quiz-score').style.display = 'none';
+    renderQuizTable();
+    $('quiz-panel').style.display = 'block';
+    $('quiz-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderQuizTable() {
+    const { vars, rows } = quizData;
+    const table = $('quiz-table');
+
+    let html = '<thead><tr>';
+    vars.forEach(v => { html += `<th>${v}</th>`; });
+    html += `<th class="result-col">Result</th></tr></thead>`;
+
+    html += '<tbody>';
+    rows.forEach((env, i) => {
+        html += '<tr>';
+        vars.forEach(v => {
+        html += `<td class="${boolClass(env[v])}">${boolStr(env[v])}</td>`;
+        });
+        html += `<td class="result-col"><input class="quiz-input" data-row="${i}" maxlength="1" placeholder="?" autocomplete="off"/></td>`;
+        html += '</tr>';
+    });
+    html += '</tbody>';
+
+    table.innerHTML = html;
+
+    // Auto-advance on T/F/t/f/1/0 input
+    table.querySelectorAll('.quiz-input').forEach(inp => {
+        inp.addEventListener('input', function() {
+        const v = this.value.toUpperCase();
+        if (v === 'T' || v === 'F') {
+            this.value = v;
+            this.classList.remove('correct', 'wrong');
+            // Move to next
+            const all = [...table.querySelectorAll('.quiz-input')];
+            const idx = all.indexOf(this);
+            if (idx < all.length - 1) all[idx + 1].focus();
+        } else if (v === '1') { this.value = 'T'; }
+        else if (v === '0') { this.value = 'F'; }
+        else { this.value = ''; }
+        });
+        inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !this.value) {
+            const all = [...table.querySelectorAll('.quiz-input')];
+            const idx = all.indexOf(this);
+            if (idx > 0) { all[idx - 1].focus(); all[idx - 1].value = ''; }
+        }
+        });
+    });
+    }
+
+    function checkQuiz() {
+    if (!quizData) return;
+    const inputs = document.querySelectorAll('#quiz-table .quiz-input');
+    let correct = 0;
+    let answered = 0;
+    inputs.forEach((inp, i) => {
+        const userVal = inp.value.toUpperCase();
+        if (!userVal) { inp.classList.add('wrong'); return; }
+        answered++;
+        const expected = boolStr(quizData.results[i]);
+        if (userVal === expected) {
+        inp.classList.remove('wrong'); inp.classList.add('correct');
+        correct++;
+        } else {
+        inp.classList.remove('correct'); inp.classList.add('wrong');
+        }
+    });
+
+    const total = quizData.results.length;
+    const pct = Math.round((correct / total) * 100);
+    const msg = correct === total
+        ? `🎉 Perfect! ${correct}/${total} — All correct!`
+        : correct === 0
+        ? `😬 ${correct}/${total} — Keep practicing!`
+        : `✅ ${correct}/${total} (${pct}%) — ${correct >= total * 0.7 ? 'Good effort!' : 'Keep at it!'}`;
+
+    const scoreEl = $('quiz-score');
+    scoreEl.textContent = msg;
+    scoreEl.style.display = 'block';
+    }
+
+    /* ============================================
+    CHEAT SHEET
+    ============================================ */
+    $('btn-sheet').addEventListener('click', () => {
+    $('sheet-overlay').style.display = 'flex';
+    });
+
+    $('sheet-close').addEventListener('click', () => {
+    $('sheet-overlay').style.display = 'none';
+    });
+
+    $('sheet-overlay').addEventListener('click', (e) => {
+    if (e.target === $('sheet-overlay')) $('sheet-overlay').style.display = 'none';
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') $('sheet-overlay').style.display = 'none';
+    });
+
+    /* ============================================
+    THEME SWITCHER
+    ============================================ */
+    
+const themes = ['spring', 'summer', 'fall', 'winter'];
+
+const music = document.getElementById("bg-music");
+
+const config = {
+    spring: { bg: "sprin.gif", music: "sounds/Spring.mp3" },
+    summer: { bg: "Summer.gif", music: "sounds/Summer.mp3" },
+    fall:   { bg: "Fall.gif",   music: "sounds/Falls.mp3" },
+    winter: { bg: "Winter.gif", music: "sounds/Winter.mp3" }
+};
+
+document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const theme = btn.dataset.theme;
+
+        // ✅ YOUR ORIGINAL SYSTEM (KEEP THIS)
+        themes.forEach(t => document.body.classList.remove('theme-' + t));
+        document.body.classList.add('theme-' + theme);
+
+        // 🎨 BACKGROUND IMAGE (FIX MISSING PART)
+        document.body.style.backgroundImage = `url(${config[theme].bg})`;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+
+        // 🎵 MUSIC
+        music.src = config[theme].music;
+        music.volume = 0.4;
+        music.play().catch(() => {
+            console.log("Click required for audio");
         });
 
-        // Result column
-        const tdRes = tr.insertCell();
-        tdRes.style.borderLeft = '2px solid rgba(180,140,80,0.25)';
-        const spanRes = document.createElement('span');
-        spanRes.className = row.result ? 'val-true' : 'val-false';
-        spanRes.textContent = row.result ? 'T' : 'F';
-        tdRes.appendChild(spanRes);
+        // 🔘 ACTIVE BUTTON UI
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // 🌸 TOAST
+        const emojis = { spring: '🌸', summer: '☀️', fall: '🍂', winter: '❄️' };
+        showToast(`Switched to ${emojis[theme]} ${theme.charAt(0).toUpperCase() + theme.slice(1)} theme`);
     });
+});
 
-    wrap.hidden = false;
-    }
-
-    function showError(msg) {
-    const el = document.getElementById('errorMsg');
-    el.textContent = msg;
-    el.hidden = false;
-    }
-
-    function clearError() {
-    const el = document.getElementById('errorMsg');
-    el.hidden = true;
-    el.textContent = '';
-    }
-
-    function setBuddyMsg(html) {
-    document.getElementById('buddyBubble').innerHTML = html;
-    }
-
-    /* ────────────────────────────────────────────────────────────
-    11.  EVENT WIRING
-    ──────────────────────────────────────────────────────────── */
-    document.getElementById('generateBtn').addEventListener('click', () => {
-    playClick();
-    clearError();
-    const expr = document.getElementById('exprInput').value.trim();
-
-    if (!expr) {
-        showError('Please enter a logical expression first.');
-        setBuddyMsg('🤔 Hmm, I need something to evaluate! Try: <code>A ^ (B v -C)</code>');
-        return;
-    }
-
-    try {
-        const { vars, rows } = generateTable(expr);
-
-        if (vars.length === 0) {
-        showError('No variables found. Use capital letters like A, B, C.');
-        return;
-        }
-
-        renderTable(vars, rows, expr);
-        playSuccess();
-        setBuddyMsg(`✅ Harvested ${rows.length} rows for <code>${expr}</code>! Look at all that truth!`);
-    } catch (e) {
-        document.getElementById('tableWrap').hidden = true;
-        showError('Parse error: ' + e.message);
-        setBuddyMsg(`😰 Uh oh! Something went wrong: <em>${e.message}</em>. Check your expression!`);
-    }
-    });
-
-    document.getElementById('clearBtn').addEventListener('click', () => {
-    playClick();
-    document.getElementById('exprInput').value = '';
-    document.getElementById('tableWrap').hidden = true;
-    clearError();
-    setBuddyMsg(SEASONS[currentSeason].msg);
-    });
-
-    document.querySelectorAll('.season-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        playClick();
-        applySeason(btn.dataset.season);
-    });
-    });
-
-    document.getElementById('soundToggle').addEventListener('click', () => {
-    if (!audioCtx) initAudio();
-    soundOn = !soundOn;
-    document.getElementById('soundToggle').textContent = soundOn ? '🔊' : '🔇';
-    playClick();
-    });
-
-    // Also allow Enter key in input
-    document.getElementById('exprInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('generateBtn').click();
-    });
-
-    /* ────────────────────────────────────────────────────────────
-    12.  INIT
-    ──────────────────────────────────────────────────────────── */
-    applySeason('spring');
+    /* ============================================
+    INIT
+    ============================================ */
+    input.focus();
