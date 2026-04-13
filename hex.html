@@ -7,47 +7,55 @@
     <link rel="stylesheet" href="hexStyle.css">
 </head>
 <body>
-    <br><br><br>
+    <div class="Homepage">
+    <p class="name">CREATED by jd and xean</p>
     <div class="caldiv">
-        
-        <section id="calc">
-        <h1 class="title">HEXADECI-CALCU</h1>
+        <section id="calcbody">
+        <h1 class="title">HEX-CALCU</h1>
     <p id="display"></p>
     <div class="buttons">
-        <button onclick="sNumber(0)">0</button>
-        <button onclick="sNumber(1)">1</button>
-        <button onclick="sNumber(2)">2</button>
-        <button onclick="sNumber(3)">3</button>
-        <button onclick="sNumber(4)">4</button>
-        <button onclick="sNumber(5)">5</button>
-        <button onclick="sNumber(6)">6</button>
-        <button onclick="sNumber(7)">7</button>
-        <button onclick="sNumber(8)">8</button>
-        <button onclick="sNumber(9)">9</button>
-        <button onclick="sNumber(10)">A</button>
-        <button onclick="sNumber(11)">B</button>
-        <button onclick="sNumber(12)">C</button>
-        <button onclick="sNumber(13)">D</button>
-        <button onclick="sNumber(14)">E</button>
-        <button onclick="sNumber(15)">F</button>
-        <button onclick="Add()">+</button>
-        <button onclick="minum()">-</button>
-        <button onclick="multi()">x</button>
-        <button onclick="division()">/</button>
-        <button id="span2" onclick="Ecual()">=</button>
-        <button onclick="clearDisplay()">C</button>
-        <button id="span" onclick="conversion()">Hex-Binary</button>
-        <button id="span" onclick="conversiom()">Bina-Hex</button>
+        <button onclick="Num(10)">A</button>
+        <button onclick="Num(7)">7</button>
+        <button onclick="Num(8)">8</button>
+        <button onclick="Num(9)">9</button>
+        <button onclick="Num(11)">B</button>
+        <button onclick="Num(4)">4</button>
+        <button onclick="Num(5)">5</button>
+        <button onclick="Num(6)">6</button>
+        <button onclick="Num(12)">C</button>
+        <button onclick="Num(1)">1</button>
+        <button onclick="Num(2)">2</button>
+        <button onclick="Num(3)">3</button>
+        <button onclick="Num(13)">D</button>
+        <button onclick="Num(0)">0</button>
+        <button id="plus_bg" onclick="Add()">+</button>
+        <button id="minus_bg" onclick="minum()">-</button>
+        <button onclick="Num(14)">E</button>
+        <!-- <button  id="span" onclick="conversiom()">Bina-Hex</button> -->
+        <!-- <button onclick="multi()">x</button> -->
+        <!-- <button onclick="division()">/</button> -->
+        <button id="span2" class="c_bg" onclick="clearDisplay()">CLEAR</button>
+        <button onclick="Num(15)">F</button>
+        
+        <!-- <button id="span" onclick="conversion()">Hex-Binary</button> -->
+        <button id="span2" class="e_bg" onclick="Ecual()" >=</button>
         
 
     </div>
-
+    </div>    
     </section>
 
+    <button class="bg_bg">BG</button>
+
+
+
+    <!--  
     <section id="hex_bin">
         <h2>input Hex number</h2>
         <input id="hexB" type="text">
+
         <button id="convert" onclick="binary()">convert</button>
+        
         <h2 id="bintxt">Binary Value</h2>
         <input id="binH" type="text" readonly>
 
@@ -59,7 +67,7 @@
     <button id="bh" onclick="binaryToHex()">Convert</button>
     <h2 id="b">Hex Value</h2>
     <input id="hexOutput" type="text" readonly>
-    </section>
+    </section>-->
 
     
     </div>
@@ -67,6 +75,6 @@
     
 
 
-<script src="hexFUnction.js"></script>
+<script src="secss.js"></script>
 </body>
 </html>
